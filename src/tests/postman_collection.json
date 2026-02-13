@@ -1,0 +1,65 @@
+{
+	"info": {
+		"name": "MediAgenda API Tests",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Obtener Citas (Calendario)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost/MediAgenda/api/get_citas.php",
+					"protocol": "http",
+					"host": ["localhost"],
+					"path": ["MediAgenda", "api", "get_citas.php"]
+				}
+			}
+		},
+		{
+			"name": "Agendar Nueva Cita",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"id_paciente\": 1,\n    \"id_doctor\": 1,\n    \"fecha_cita\": \"2026-02-20\",\n    \"hora_inicio\": \"10:00:00\",\n    \"hora_fin\": \"11:00:00\",\n    \"motivo\": \"Consulta de prueba desde Postman\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost/MediAgenda/api/create_cita.php",
+					"protocol": "http",
+					"host": ["localhost"],
+					"path": ["MediAgenda", "api", "create_cita.php"]
+				}
+			}
+		},
+		{
+			"name": "Eliminar Cita",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"id_cita\": 1\n}"
+				},
+				"url": {
+					"raw": "http://localhost/MediAgenda/api/delete_cita.php",
+					"protocol": "http",
+					"host": ["localhost"],
+					"path": ["MediAgenda", "api", "delete_cita.php"]
+				}
+			}
+		}
+	]
+}

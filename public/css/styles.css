@@ -1,0 +1,52 @@
+:root {
+    --hospital-blue: #0d6efd;
+    --hospital-dark: #004085;
+    --hospital-light: #f8f9fa;
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+body {
+    background-color: #f0f2f5;
+    font-family: 'Inter', sans-serif;
+}
+
+/* Agenda Container */
+#calendar {
+    background: white;
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: var(--shadow-md);
+}
+
+/* Navbar Personalizada */
+.navbar {
+    background: var(--hospital-dark) !important;
+    padding: 1rem 0;
+}
+
+/* Botones y Modales */
+.btn-primary {
+    background: var(--hospital-blue);
+    border: none;
+    padding: 0.6rem 1.5rem;
+    border-radius: 8px;
+}
+
+.modal-content {
+    border-radius: 20px;
+    border: none;
+}
+
+.modal-header {
+    background: var(--hospital-blue);
+    color: white;
+    border-radius: 20px 20px 0 0;
+}
+
+/* Tabla de Admin */
+.table-responsive {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+}

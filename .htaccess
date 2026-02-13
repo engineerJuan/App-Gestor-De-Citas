@@ -1,0 +1,17 @@
+# 1. Seguridad: Evitar que se listen los archivos de las carpetas
+Options -Indexes
+
+# 2. Navegación: Establecer la página de inicio por defecto
+DirectoryIndex public/index.php
+
+# 3. Privacidad: Proteger archivos sensibles contra descargas directas
+<FilesMatch "^\.|\.(sql|log|ini|sh|bak)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# 4. Control de Acceso: Bloquear entrada a carpetas de lógica
+RewriteEngine On
+
+# Bloqueamos config, api y src 
+RewriteRule ^(config|src|api)/ - [F,L]

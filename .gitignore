@@ -1,0 +1,27 @@
+# Extensiones de archivos temporales de sistema
+.DS_Store
+Thumbs.db
+
+# Configuración de editores
+.vscode/
+*.code-workspace
+
+# Logs de error y temporales de PHP
+error_log
+*.log
+npm-debug.log*
+
+# Servidor local
+phpMyAdmin/
+tmp/
+
+# Dependencias
+vendor/
+node_modules/
+
+# esquema_db.sql
+*.bak
+*.sql.gz
+
+# Archivos de entorno
+.env
