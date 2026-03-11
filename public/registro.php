@@ -1,18 +1,11 @@
 <?php
-// VISTA DE REGISTRO: Interfaz para que los nuevos pacientes creen una cuenta en el sistema.
 session_start();
 
-// REDIRECCIÓN DE SESIÓN: Si el usuario ya está logueado, lo envía a su panel correspondiente para evitar registros duplicados.
 if (isset($_SESSION['user_id'])) {
-    if ($_SESSION['role'] === 'admin') {
-        header("Location: admin.php");
-    } else {
-        header("Location: agenda.php");
-    }
+    header("Location: " . ($_SESSION['role'] === 'admin' ? "admin.php" : "agenda.php"));
     exit();
 }
 
-// DEPENDENCIAS: Carga la cabecera visual del sitio.
 require_once '../src/views/layout/header.php';
 ?>
 
@@ -21,7 +14,7 @@ require_once '../src/views/layout/header.php';
         <h3 class="text-center fw-bold text-dark mb-4">Crear Cuenta</h3>
         <p class="text-center text-muted mb-4">Regístrate para gestionar tus citas</p>
 
-        <form action="../api/auth_registro.php" method="POST" id="registroForm">
+        <form id="registroForm">
             <div class="row g-3">
                 <div class="col-md-6">
                     <label for="nombre" class="form-label fw-bold text-secondary">Nombre</label>
@@ -29,7 +22,8 @@ require_once '../src/views/layout/header.php';
                 </div>
                 <div class="col-md-6">
                     <label for="edad" class="form-label fw-bold text-secondary">Edad</label>
-                    <input type="number" id="edad" name="edad" class="form-control bg-light border-0" min="1" max="120" required>
+                    <input type="number" id="edad" name="edad" class="form-control bg-light border-0" min="18" max="120" required>
+                    <small class="text-muted" style="font-size: 0.75rem;">Debe ser mayor de 18 años</small>
                 </div>
 
                 <div class="col-md-6">
@@ -44,7 +38,7 @@ require_once '../src/views/layout/header.php';
                 <div class="col-md-6">
                     <label for="curp" class="form-label fw-bold text-secondary">CURP</label>
                     <input type="text" id="curp" name="curp" class="form-control bg-light border-0" maxlength="18" required style="text-transform: uppercase;">
-                    <small class="text-muted">18 caracteres alfanuméricos</small>
+                    <small class="text-muted small" style="font-size: 0.75rem;">18 caracteres alfanuméricos</small>
                 </div>
                 <div class="col-md-6">
                     <label for="genero" class="form-label fw-bold text-secondary">Género</label>
@@ -65,19 +59,14 @@ require_once '../src/views/layout/header.php';
                     <label for="password" class="form-label fw-bold text-secondary">Contraseña</label>
                     <div class="input-group">
                         <input type="password" id="password" name="password" class="form-control bg-light border-0" minlength="8" required>
-                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">
-                            <i class="bi bi-eye-slash"></i>
-                        </button>
+                        <button class="btn btn-light border-0" type="button" id="togglePassword"><i class="bi bi-eye-slash"></i></button>
                     </div>
-                    <small class="text-muted">Mínimo 8 caracteres</small>
                 </div>
                 <div class="col-md-6">
                     <label for="confirm_password" class="form-label fw-bold text-secondary">Confirmar contraseña</label>
                     <div class="input-group">
                         <input type="password" id="confirm_password" name="confirm_password" class="form-control bg-light border-0" minlength="8" required>
-                        <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
-                            <i class="bi bi-eye-slash"></i>
-                        </button>
+                        <button class="btn btn-light border-0" type="button" id="toggleConfirmPassword"><i class="bi bi-eye-slash"></i></button>
                     </div>
                 </div>
             </div>
@@ -93,7 +82,6 @@ require_once '../src/views/layout/header.php';
 </div>
 
 <script>
-// VISIBILIDAD: Alterna el tipo de input para mostrar u ocultar el texto de la contraseña principal.
 document.getElementById('togglePassword').addEventListener('click', function() {
     const password = document.getElementById('password');
     const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
@@ -102,7 +90,6 @@ document.getElementById('togglePassword').addEventListener('click', function() {
     this.querySelector('i').classList.toggle('bi-eye-slash');
 });
 
-// VISIBILIDAD CONFIRMACIÓN: Alterna el tipo de input para la confirmación de contraseña.
 document.getElementById('toggleConfirmPassword').addEventListener('click', function() {
     const password = document.getElementById('confirm_password');
     const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
@@ -111,27 +98,27 @@ document.getElementById('toggleConfirmPassword').addEventListener('click', funct
     this.querySelector('i').classList.toggle('bi-eye-slash');
 });
 
-// PROCESAMIENTO ASÍNCRONO: Gestiona el envío de datos mediante Fetch API para evitar recargas de página innecesarias.
 document.getElementById('registroForm').addEventListener('submit', async function(e) {
-    
-    // PREVENCIÓN: Evita el envío tradicional del formulario para manejar la validación y respuesta por JS.
     e.preventDefault();
+    
+    const edadInput = document.getElementById('edad').value;
+    if (edadInput < 18) {
+        alert('Debes ser mayor de 18 años para registrarte en el sistema.');
+        return;
+    }
     
     const password = document.getElementById('password').value;
     const confirm = document.getElementById('confirm_password').value;
     
-    // VALIDACIÓN LOCAL: Comprueba que ambas contraseñas coincidan antes de realizar la petición al servidor.
     if (password !== confirm) {
         alert('Las contraseñas no coinciden');
         return;
     }
     
-    // INTERFAZ DE CARGA: Desactiva el botón y muestra un spinner para indicar que el proceso está en curso.
     const btn = document.getElementById('btnRegistro');
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Registrando...';
     
-    // ENVÍO DE DATOS: Empaqueta los campos del formulario y los envía al endpoint de registro en el backend.
     const formData = new FormData(this);
     
     try {
@@ -141,8 +128,6 @@ document.getElementById('registroForm').addEventListener('submit', async functio
         });
         
         const data = await res.json();
-        
-        // MANEJO DE RESPUESTA: Redirige al panel si el registro fue exitoso o muestra el error devuelto por la API.
         if (data.status === 'success') {
             window.location.href = data.redirect;
         } else {
@@ -151,8 +136,7 @@ document.getElementById('registroForm').addEventListener('submit', async functio
             btn.innerHTML = 'CREAR CUENTA';
         }
     } catch (error) {
-        // ERROR DE RED: Notifica al usuario si hubo un fallo en la conexión con el servidor.
-        alert('Ocurrió un error en el registro. Intente más tarde.');
+        alert('Ocurrió un error en el registro.');
         btn.disabled = false;
         btn.innerHTML = 'CREAR CUENTA';
     }
