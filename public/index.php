@@ -1,34 +1,23 @@
 <?php
-// PÁGINA DE INICIO (INDEX): Vista principal del sistema que combina marketing (Hero/Servicios) con funcionalidad dinámica para pacientes autenticados.
-
-// GESTIÓN DE SESIÓN: Reanuda la sesión del usuario para personalizar la experiencia y verificar permisos de acceso.
 session_start();
 
-// DEPENDENCIAS: Carga la cabecera global y la conexión centralizada a la base de datos necesaria para las consultas.
 require_once '../src/views/layout/header.php';
 require_once '../config/Database.php';
 
-// RUTEO DINÁMICO: Determina el destino del botón principal; si el usuario no ha iniciado sesión, lo redirige al login de pacientes.
 $ruta_agendar = isset($_SESSION['user_id']) ? 'agenda.php' : 'login_paciente.php';
 
-// CONTENEDOR DE CITAS: Inicializa un arreglo vacío para almacenar los próximos compromisos médicos del paciente.
 $proximas_citas = [];
 
-// LÓGICA DE USUARIO: Si hay una sesión activa de rol 'paciente', procede a extraer sus datos de salud en tiempo real.
 if (isset($_SESSION['user_id']) && $_SESSION['role'] === 'paciente') {
-    
-    // CONEXIÓN DB: Obtiene la instancia única de la base de datos (Singleton).
     $db = Database::getInstance();
     
-    // CONSULTA FILTRADA: Recupera las próximas 3 citas que aún no han ocurrido (CURDATE), incluyendo el nombre del especialista.
     $stmt = $db->prepare("SELECT c.fecha_cita, c.hora_inicio, d.nombre AS doctor, d.apellido_paterno, c.estado_cita
                            FROM citas c
                            JOIN doctores d ON c.id_doctor = d.id_doctor
-                           WHERE c.id_paciente = ? AND c.fecha_cita >= CURDATE()
+                           WHERE c.id_paciente = ? AND c.fecha_cita >= CURDATE() AND c.estado_cita IN ('Pendiente', 'Confirmada')
                            ORDER BY c.fecha_cita ASC, c.hora_inicio ASC
                            LIMIT 3");
                            
-    // EJECUCIÓN SEGURA: Utiliza el ID de la sesión para evitar que el paciente pueda ver citas que no le pertenecen.
     $stmt->execute([$_SESSION['user_id']]);
     $proximas_citas = $stmt->fetchAll();
 }
@@ -38,10 +27,10 @@ if (isset($_SESSION['user_id']) && $_SESSION['role'] === 'paciente') {
     <div class="container hero-container">
         <div class="hero-text">
             <h6 class="hero-pre-title">MediAgenda Elite</h6>
-            <h1 class="hero-title">Gestión médica <span class="text-primary">de precisión</span><br>al alcance de tu mano</h1>
-            <p class="hero-description">Diseñado para profesionales de la salud y pacientes que exigen eficiencia, seguridad y control total en la administración de citas médicas.</p>
+            <h1 class="hero-title">Gestión médica de <span class="text-primary">alta precisión</span></h1>
+            <p class="hero-description">Tu agenda, historial y consultas organizadas en un solo lugar. Diseñado para simplificar tu vida con tecnología segura y eficiente.</p>
             <div class="hero-buttons">
-                <a href="<?php echo $ruta_agendar; ?>" class="btn btn-primary">Agendar cita ahora</a>
+                <a href="<?php echo $ruta_agendar; ?>" class="btn btn-primary shadow-sm">Agendar cita ahora</a>
                 <a href="#servicios" class="btn btn-outline-primary">Conoce más</a>
             </div>
         </div>
@@ -51,42 +40,24 @@ if (isset($_SESSION['user_id']) && $_SESSION['role'] === 'paciente') {
     </div>
 </section>
 
-<?php 
-// RENDERIZADO CONDICIONAL: Solo muestra el bloque de "Próximas citas" si el paciente tiene registros vigentes en la base de datos.
-if (!empty($proximas_citas)): 
-?>
+<?php if (!empty($proximas_citas)): ?>
 <section class="py-5 bg-light">
     <div class="container">
-        <h2 class="fw-bold text-dark-blue mb-4">Tus próximas citas</h2>
+        <h2 class="fw-bold text-dark-blue mb-4">Tus próximas citas activas</h2>
         <div class="row g-4">
-            <?php 
-            // ITERACIÓN DE DATOS: Recorre el arreglo de citas obtenidas para generar dinámicamente las tarjetas informativas.
-            foreach ($proximas_citas as $cita): 
-            ?>
+            <?php foreach ($proximas_citas as $cita): ?>
             <div class="col-md-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
+                <div class="card border-0 shadow-sm h-100" style="border-radius: 15px;">
+                    <div class="card-body p-4">
                         <div class="d-flex align-items-center mb-3">
                             <i class="bi bi-calendar-check fs-2 text-primary me-3"></i>
                             <div>
-                                <h6 class="fw-bold text-dark mb-0"><?php 
-                                // FORMATEO DE FECHA: Convierte el formato YYYY-MM-DD de MySQL a un formato legible (Día/Mes/Año).
-                                echo date('d/m/Y', strtotime($cita['fecha_cita'])); 
-                                ?></h6>
-                                <p class="text-secondary small mb-0"><?php 
-                                // FORMATEO DE HORA: Convierte el formato de 24h a 12h con indicador AM/PM.
-                                echo date('h:i A', strtotime($cita['hora_inicio'])); 
-                                ?></p>
+                                <h6 class="fw-bold text-dark mb-0"><?php echo date('d/m/Y', strtotime($cita['fecha_cita'])); ?></h6>
+                                <p class="text-secondary small mb-0"><?php echo date('h:i A', strtotime($cita['hora_inicio'])); ?></p>
                             </div>
                         </div>
-                        <p class="text-secondary">Dr. <?php 
-                        // SANITIZACIÓN: Limpia los nombres de los doctores para prevenir inyecciones de código malicioso en el navegador (XSS).
-                        echo htmlspecialchars($cita['doctor'] . ' ' . $cita['apellido_paterno']); 
-                        ?></p>
-                        <span class="badge <?php 
-                        // ESTADO DINÁMICO: Aplica clases de Bootstrap (Colores) según el estatus actual de la cita médica.
-                        echo $cita['estado_cita'] === 'Pendiente' ? 'bg-warning' : ($cita['estado_cita'] === 'Confirmada' ? 'bg-success' : 'bg-secondary'); 
-                        ?>">
+                        <p class="text-secondary mb-3"><i class="bi bi-person-badge text-muted me-2"></i>Dr. <?php echo htmlspecialchars($cita['doctor'] . ' ' . $cita['apellido_paterno']); ?></p>
+                        <span class="badge rounded-pill px-3 py-2 <?php echo $cita['estado_cita'] === 'Pendiente' ? 'bg-warning text-dark' : 'bg-success'; ?>">
                             <?php echo $cita['estado_cita']; ?>
                         </span>
                     </div>
@@ -130,14 +101,11 @@ if (!empty($proximas_citas)):
     </div>
 </section>
 
-<section class="cta-section py-4">
+<section class="cta-section py-5" style="background-color: #f0f4f8;">
     <div class="container text-center">
-        <h2 class="fw-bold text-dark-blue mb-3">¿Listo para transformar tu experiencia médica?</h2>
-        <a href="registro.php" class="btn btn-light btn-lg rounded-pill px-5 py-2 fw-bold shadow-sm">Crear cuenta gratuita</a>
+        <h2 class="fw-bold mb-4" style="color: #cbd5e1;">¿Listo para transformar tu experiencia médica?</h2>
+        <a href="registro.php" class="btn btn-outline-primary bg-white btn-lg rounded-pill px-5 py-2 fw-bold shadow-sm">Crear cuenta gratuita</a>
     </div>
 </section>
 
-<?php 
-// PIE DE PÁGINA: Carga el footer para cerrar las etiquetas del documento y cargar scripts de Bootstrap/JS.
-require_once '../src/views/layout/footer.php'; 
-?>
+<?php require_once '../src/views/layout/footer.php'; ?>
